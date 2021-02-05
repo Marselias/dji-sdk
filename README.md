@@ -1,1 +1,3 @@
-# dji-skd
+# The Tello Edu drone application.
+
+ 
