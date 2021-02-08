@@ -4,7 +4,7 @@ This application contains GUI for controlling Tello Edu drone.
 
 ## Requirements
 
-Python standard library.
+Python standard library, opencv
 
 ## Connecting a drone
 
