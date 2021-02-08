@@ -1,6 +1,11 @@
+import cv2
 import logging
+import numpy as np
+import os
+import signal
 import socket
 import sys
+import subprocess
 import threading
 import time
 
@@ -13,7 +18,6 @@ class FlightManager(metaclass=Singleton):
     DEFAULT_DISTANCE = 20
     DEFAULT_SPEED = 10
     DEFAULT_ANGLE = 10
-    DEFAULT_HEIGHT = 20
 
     def __init__(self, host_ip='192.168.10.2', host_port=8889,
                  drone_ip='192.168.10.1', drone_port=8889, default_speed=DEFAULT_SPEED):
@@ -27,23 +31,27 @@ class FlightManager(metaclass=Singleton):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((self.host_ip, self.host_port))
         self.speed = default_speed
+
+        # Response Part
         self.response = None
         self.stop_event = threading.Event()
-        self._response_thread = threading.Thread(
-            target=self.receive_response,
-            args=(self.stop_event,))
+        self._response_thread = threading.Thread(target=self.receive_response, args=(self.stop_event,))
         self._response_thread.start()
-        self.is_commanded = False
+
+        # VideoStream Part
+        self.video_state = False
+        self.video_handler = None
+        self.frame = None
+        self._receive_thread = threading.Thread(target=self.receive_stream, args=(self.stop_event,))
+        self._receive_thread.start()
 
     def receive_response(self, stop_event):
         while not stop_event.is_set():
             try:
                 self.response, ip = self.socket.recvfrom(3000)
-                self.logger.info({'action': 'receive_response',
-                                 'response': self.response})
+                self.logger.info({'action': 'receive_response', 'response': self.response})
             except socket.error as ex:
-                self.logger.error({'action': 'receive_response',
-                                  'ex': ex})
+                self.logger.error({'action': 'receive_response', 'ex': ex})
                 print(self.response)
                 break
 
@@ -162,3 +170,11 @@ class FlightManager(metaclass=Singleton):
 
     def send_stop(self, event=None):
         self.send_rc_abcd(0, 0, 0, 0)
+
+    def receive_stream(self, stop_event):
+        while not stop_event.is_set():
+            if self.video_state:
+                try:
+                    ret, self.frame = self.video_handler.read()
+                except Exception as e:
+                    print(e)

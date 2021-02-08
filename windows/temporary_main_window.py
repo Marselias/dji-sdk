@@ -1,6 +1,8 @@
+import cv2
 from PIL import ImageTk, Image
 import socket
 import tkinter
+import threading
 
 
 from functionality.flight_manager import FlightManager
@@ -39,8 +41,12 @@ class MainWindow(tkinter.Tk):
         self.connection_status = False
         self.controller_window_state = False
 
+        self.stream_window = None
+
         self.build_connection_frame()
         self.build_footer_frame()
+
+        self._displaying_thread = threading.Thread(target=self.display_stream, args=())
 
     def build_connection_frame(self):
         """Main frame widgets"""
@@ -98,8 +104,7 @@ class MainWindow(tkinter.Tk):
         quit_button = tkinter.Button(self.footer_frame, text='Quit App', command=self.close_app)
         controller_button = tkinter.Button(self.footer_frame, text='Launch Controller',
                                            command=self.build_controller_window)
-        but = tkinter.Button(self.footer_frame, text='Test', repeatinterval=500,
-                             repeatdelay=100)
+        but = tkinter.Button(self.footer_frame, text='Stream', command=self.build_video_window)
 
         but.pack()
         controller_button.pack()
@@ -116,6 +121,8 @@ class MainWindow(tkinter.Tk):
             try:
                 self.drone = FlightManager(self.host_ip_entry.get(), int(self.host_port_entry.get()),
                                            self.drone_ip_entry.get(), int(self.drone_port_entry.get()))
+                self.drone.send_command('command')
+                self.drone.send_command('streamon')
             except OSError:
                 self.connection_info_label.delete(0, tkinter.END)
                 self.connection_info_label.insert(0, 'Connection action result: failed to connect!')
@@ -172,8 +179,6 @@ class MainWindow(tkinter.Tk):
 
         if not self.controller_window_state and self.connection_status:
             self.controller_window_state = True
-            self.drone.send_command('command')
-            self.drone.send_command('streamon')
             self.drone.set_speed(self.drone.speed)
 
             self.controller_window = ControllerWindow(master=self)
@@ -182,6 +187,25 @@ class MainWindow(tkinter.Tk):
     def close_controller(self):
         self.controller_window_state = False
         self.controller_window.destroy()
+
+    def build_video_window(self):
+        self.drone.video_handler = cv2.VideoCapture('udp://@0.0.0.0:11111')
+        self.drone.video_handler.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self.drone.video_state = True
+
+        # Start displaying thread
+        self._displaying_thread.start()
+
+    def display_stream(self):
+        while True:
+            try:
+                cv2.imshow('VideoStream', self.drone.frame)
+            except Exception as e:
+                print(e)
+                continue
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        self.drone.video_state = False
 
 
 class ControllerWindow(tkinter.Toplevel):
