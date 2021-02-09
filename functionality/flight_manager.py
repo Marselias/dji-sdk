@@ -101,43 +101,43 @@ class FlightManager(metaclass=Singleton):
     def send_without_response(self, command):
         self.socket.sendto(command.encode('utf-8'), self.drone_address)
 
-    def takeoff(self, event=None):
+    def takeoff(self):
         return self.send_command('takeoff')
 
-    def land(self, event=None):
+    def land(self):
         return self.send_command('land')
 
     def move(self, direction, distance):
         return self.send_command(f'{direction} {distance}')
 
-    def up(self, distance=DEFAULT_DISTANCE, event=None):
-        return self.move('up', distance=FlightManager.DEFAULT_DISTANCE)
+    def up(self, distance=DEFAULT_DISTANCE):
+        return self.move('up', distance)
 
-    def down(self, distance=DEFAULT_DISTANCE, event=None):
-        return self.move('down', distance=FlightManager.DEFAULT_DISTANCE)
+    def down(self, distance=DEFAULT_DISTANCE):
+        return self.move('down', distance)
 
-    def left(self, distance=DEFAULT_DISTANCE, event=None):
-        return self.move('left', distance=FlightManager.DEFAULT_DISTANCE)
+    def left(self, distance=DEFAULT_DISTANCE):
+        return self.move('left', distance)
 
-    def right(self, distance=DEFAULT_DISTANCE, event=None):
-        return self.move('right', distance=FlightManager.DEFAULT_DISTANCE)
+    def right(self, distance=DEFAULT_DISTANCE):
+        return self.move('right', distance)
 
-    def forward(self, distance=DEFAULT_DISTANCE, event=None):
-        return self.move('forward', distance=FlightManager.DEFAULT_DISTANCE)
+    def forward(self, distance=DEFAULT_DISTANCE):
+        return self.move('forward', distance)
 
-    def back(self, distance=DEFAULT_DISTANCE, event=None):
-        return self.move('back', distance=FlightManager.DEFAULT_DISTANCE)
+    def back(self, distance=DEFAULT_DISTANCE):
+        return self.move('back', distance)
 
     def set_speed(self, speed):
         return self.send_command(f'speed {speed}')
 
-    def clockwise(self, degree=DEFAULT_ANGLE, event=None):
-        return self.move('cw', FlightManager.DEFAULT_ANGLE)
+    def clockwise(self, degree=DEFAULT_ANGLE):
+        return self.move('cw', degree)
 
-    def counter_clockwise(self, degree=DEFAULT_ANGLE, event=None):
-        return self.move('ccw', FlightManager.DEFAULT_ANGLE)
+    def counter_clockwise(self, degree=DEFAULT_ANGLE):
+        return self.move('ccw', degree)
 
-    def stop_move(self, event=None):
+    def stop_move(self):
         print('stopped')
         return self.send_command('stop')
 

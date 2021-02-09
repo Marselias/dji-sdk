@@ -26,13 +26,7 @@ class MainWindow(tkinter.Tk):
         self.title('Tello Drone Controller')
 
         # Widgets that could be referenced to
-        self.host_ip_entry = None
-        self.drone_ip_entry = None
-        self.host_port_entry = None
-        self.drone_port_entry = None
-        self.connection_info_label = None
-        self.disconnection_info_label = None
-        self.connection_canvas = None
+        self.widgets = {}
 
         self.connection_frame = None
         self.footer_frame = None
@@ -53,14 +47,14 @@ class MainWindow(tkinter.Tk):
         font1 = ('Arial', 10, 'bold italic')
 
         self.connection_frame = tkinter.LabelFrame(self, text='UDP Connection', bg=MainWindow.color3, font=font1, bd=5)
-        self.host_ip_entry = tkinter.Entry(self.connection_frame)
-        self.host_ip_entry.insert(0, socket.gethostbyname(socket.gethostname()))
-        self.drone_ip_entry = tkinter.Entry(self.connection_frame)
-        self.drone_ip_entry.insert(0, '192.168.10.1')
-        self.host_port_entry = tkinter.Entry(self.connection_frame)
-        self.host_port_entry.insert(0, '8889')
-        self.drone_port_entry = tkinter.Entry(self.connection_frame)
-        self.drone_port_entry.insert(0, '8889')
+        self.widgets['host_ip_entry'] = tkinter.Entry(self.connection_frame)
+        self.widgets['host_ip_entry'].insert(0, socket.gethostbyname(socket.gethostname()))
+        self.widgets['drone_ip_entry'] = tkinter.Entry(self.connection_frame)
+        self.widgets['drone_ip_entry'].insert(0, '192.168.10.1')
+        self.widgets['host_port_entry'] = tkinter.Entry(self.connection_frame)
+        self.widgets['host_port_entry'].insert(0, '8889')
+        self.widgets['drone_port_entry'] = tkinter.Entry(self.connection_frame)
+        self.widgets['drone_port_entry'].insert(0, '8889')
 
         host_ip_label = tkinter.Label(self.connection_frame, text='Enter Host IP', bg=MainWindow.color3)
         drone_ip_label = tkinter.Label(self.connection_frame, text='Enter Drone IP', bg=MainWindow.color3)
@@ -68,10 +62,10 @@ class MainWindow(tkinter.Tk):
         drone_port_label = tkinter.Label(self.connection_frame, text='Enter Drone Port', bg=MainWindow.color3)
 
         self.connection_frame.pack(pady=10)
-        self.host_ip_entry.grid(row=0, column=0, padx=5)
-        self.drone_ip_entry.grid(row=0, column=1, padx=5)
-        self.host_port_entry.grid(row=0, column=2, padx=5)
-        self.drone_port_entry.grid(row=0, column=3, padx=5)
+        self.widgets['host_ip_entry'].grid(row=0, column=0, padx=5)
+        self.widgets['drone_ip_entry'].grid(row=0, column=1, padx=5)
+        self.widgets['host_port_entry'].grid(row=0, column=2, padx=5)
+        self.widgets['drone_port_entry'].grid(row=0, column=3, padx=5)
 
         host_ip_label.grid(row=1, column=0)
         drone_ip_label.grid(row=1, column=1)
@@ -80,21 +74,21 @@ class MainWindow(tkinter.Tk):
 
         connect_button = tkinter.Button(self.connection_frame, text='Connect!', command=self.connect)
         connect_button.grid(row=2, column=0, columnspan=4, sticky='we', pady=(10, 0), padx=10)
-        self.connection_info_label = tkinter.Entry(self.connection_frame, bg=self.color3, width=50)
-        self.connection_info_label.insert(0, 'Connection action result: ')
-        self.connection_info_label.grid(row=3, column=0, padx=10, pady=(0, 10), columnspan=3, sticky='w')
+        self.widgets['connection_info_label'] = tkinter.Entry(self.connection_frame, bg=self.color3, width=50)
+        self.widgets['connection_info_label'].insert(0, 'Connection action result: ')
+        self.widgets['connection_info_label'].grid(row=3, column=0, padx=10, pady=(0, 10), columnspan=3, sticky='w')
 
         disconnect_button = tkinter.Button(self.connection_frame, text='Disconnect!', command=self.disconnect)
         disconnect_button.grid(row=4, column=0, columnspan=4, sticky='we', pady=(10, 0), padx=10)
-        self.disconnection_info_label = tkinter.Entry(self.connection_frame, bg=self.color3, width=50)
-        self.disconnection_info_label.insert(0, 'Disconnection action result: ')
-        self.disconnection_info_label.grid(row=5, column=0, padx=10, pady=(0, 10), columnspan=3, sticky='w')
+        self.widgets['disconnection_info_label'] = tkinter.Entry(self.connection_frame, bg=self.color3, width=50)
+        self.widgets['disconnection_info_label'].insert(0, 'Disconnection action result: ')
+        self.widgets['disconnection_info_label'].grid(row=5, column=0, padx=10, pady=(0, 10), columnspan=3, sticky='w')
 
         connection_status_label = tkinter.Label(self.connection_frame, bg=self.color3, text='Connection status')
         connection_status_label.grid(row=6, column=0, columnspan=2, sticky='e')
-        self.connection_canvas = tkinter.Canvas(self.connection_frame, bg=self.color3, width=20, height=20)
-        self.connection_canvas.grid(row=6, column=2, sticky='w', pady=(0, 5))
-        self.connection_canvas.create_oval(2, 2, 20, 20, fill='red', tag='light')
+        self.widgets['connection_canvas'] = tkinter.Canvas(self.connection_frame, bg=self.color3, width=20, height=20)
+        self.widgets['connection_canvas'].grid(row=6, column=2, sticky='w', pady=(0, 5))
+        self.widgets['connection_canvas'].create_oval(2, 2, 20, 20, fill='red', tag='light')
 
     def build_footer_frame(self):
         """Footer frame build"""
@@ -119,27 +113,29 @@ class MainWindow(tkinter.Tk):
         """Establishing UDP connection with drone"""
         if not self.connection_status:
             try:
-                self.drone = FlightManager(self.host_ip_entry.get(), int(self.host_port_entry.get()),
-                                           self.drone_ip_entry.get(), int(self.drone_port_entry.get()))
+                self.drone = FlightManager(self.widgets['host_ip_entry'].get(),
+                                           int(self.widgets['host_port_entry'].get()),
+                                           self.widgets['drone_ip_entry'].get(),
+                                           int(self.widgets['drone_port_entry'].get()))
                 self.drone.send_command('command')
                 self.drone.send_command('streamon')
             except OSError:
-                self.connection_info_label.delete(0, tkinter.END)
-                self.connection_info_label.insert(0, 'Connection action result: failed to connect!')
-                self.disconnection_info_label.delete(0, tkinter.END)
-                self.disconnection_info_label.insert(0, 'Disconnection action result: ')
+                self.widgets['connection_info_label'].delete(0, tkinter.END)
+                self.widgets['connection_info_label'].insert(0, 'Connection action result: failed to connect!')
+                self.widgets['disconnection_info_label'].delete(0, tkinter.END)
+                self.widgets['disconnection_info_label'].insert(0, 'Disconnection action result: ')
 
             else:
                 self.connection_status = True
-                self.connection_info_label.delete(0, tkinter.END)
-                self.connection_info_label.insert(0, 'Connection action result: successfully connected!')
-                self.disconnection_info_label.delete(0, tkinter.END)
-                self.disconnection_info_label.insert(0, 'Disconnection action result: ')
+                self.widgets['connection_info_label'].delete(0, tkinter.END)
+                self.widgets['connection_info_label'].insert(0, 'Connection action result: successfully connected!')
+                self.widgets['disconnection_info_label'].delete(0, tkinter.END)
+                self.widgets['disconnection_info_label'].insert(0, 'Disconnection action result: ')
         else:
-            self.connection_info_label.delete(0, tkinter.END)
-            self.connection_info_label.insert(0, 'Connection action result: already connected!')
-            self.disconnection_info_label.delete(0, tkinter.END)
-            self.disconnection_info_label.insert(0, 'Disconnection action result: ')
+            self.widgets['connection_info_label'].delete(0, tkinter.END)
+            self.widgets['connection_info_label'].insert(0, 'Connection action result: already connected!')
+            self.widgets['disconnection_info_label'].delete(0, tkinter.END)
+            self.widgets['disconnection_info_label'].insert(0, 'Disconnection action result: ')
 
         self.display_status()
 
@@ -150,30 +146,30 @@ class MainWindow(tkinter.Tk):
                 self.drone.stop_dc()
                 self.drone = None
             except socket.error:
-                self.disconnection_info_label.delete(0, tkinter.END)
-                self.disconnection_info_label.insert(0, 'Disconnection action result: failed to disconnect!')
-                self.connection_info_label.delete(0, tkinter.END)
-                self.connection_info_label.insert(0, 'Connection action result:')
+                self.widgets['disconnection_info_label'].delete(0, tkinter.END)
+                self.widgets['disconnection_info_label'].insert(0, 'Disconnection action result: failed to disconnect!')
+                self.widgets['connection_info_label'].delete(0, tkinter.END)
+                self.widgets['connection_info_label'].insert(0, 'Connection action result:')
             else:
                 self.connection_status = False
-                self.disconnection_info_label.delete(0, tkinter.END)
-                self.disconnection_info_label.insert(0, 'Disconnection action result: successfully disconnected!')
-                self.connection_info_label.delete(0, tkinter.END)
-                self.connection_info_label.insert(0, 'Connection action result:')
+                self.widgets['disconnection_info_label'].delete(0, tkinter.END)
+                self.widgets['disconnection_info_label'].insert(0, 'Disconnection action result: successfully disconnected!')
+                self.widgets['connection_info_label'].delete(0, tkinter.END)
+                self.widgets['connection_info_label'].insert(0, 'Connection action result:')
         else:
-            self.disconnection_info_label.delete(0, tkinter.END)
-            self.disconnection_info_label.insert(0, 'Disconnection action result: already disconnected!')
-            self.connection_info_label.delete(0, tkinter.END)
-            self.connection_info_label.insert(0, 'Connection action result:')
+            self.widgets['disconnection_info_label'].delete(0, tkinter.END)
+            self.widgets['disconnection_info_label'].insert(0, 'Disconnection action result: already disconnected!')
+            self.widgets['connection_info_label'].delete(0, tkinter.END)
+            self.widgets['connection_info_label'].insert(0, 'Connection action result:')
         self.display_status()
 
     def display_status(self):
         """Light bulb displaying connection status"""
-        self.connection_canvas.delete('light')
+        self.widgets['connection_canvas'].delete('light')
         if self.connection_status:
-            self.connection_canvas.create_oval(2, 2, 20, 20, fill='green', tag='light')
+            self.widgets['connection_canvas'].create_oval(2, 2, 20, 20, fill='green', tag='light')
         else:
-            self.connection_canvas.create_oval(2, 2, 20, 20, fill='red', tag='light')
+            self.widgets['connection_canvas'].create_oval(2, 2, 20, 20, fill='red', tag='light')
 
     def build_controller_window(self):
 
