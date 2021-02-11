@@ -101,10 +101,10 @@ class FlightManager(metaclass=Singleton):
     def send_without_response(self, command):
         self.socket.sendto(command.encode('utf-8'), self.drone_address)
 
-    def takeoff(self):
+    def takeoff(self, event=None):
         return self.send_command('takeoff')
 
-    def land(self):
+    def land(self, event=None):
         return self.send_command('land')
 
     def move(self, direction, distance):
